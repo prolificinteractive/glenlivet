@@ -1,0 +1,32 @@
+{
+  "name": "gl4",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^0.18.0",
+    "eventemitter2": "^0.4.14",
+    "express": "^4.10.2",
+    "hiredis": "^0.1.17",
+    "jade": "^1.7.0",
+    "lodash": "^2.4.1",
+    "q": "^1.1.1",
+    "redis": "^0.12.1",
+    "request": "^2.48.0",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-jsbeautifier": "^0.2.7",
+    "grunt-mocha-test": "^0.12.4",
+    "jshint": "^2.5.10",
+    "mocha": "^2.0.1",
+    "should": "^4.3.0"
+  }
+}
