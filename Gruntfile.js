@@ -1,8 +1,10 @@
 module.exports = function (grunt) {
+  var sourceFiles = ['Gruntfile.js', 'lib/*.js', '*.js'];
 
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-jsbeautifier');
+  grunt.loadNpmTasks('grunt-istanbul');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -11,10 +13,23 @@ module.exports = function (grunt) {
         reporter: 'spec',
         require: ['should']
       },
-      src: ['lib/*/test.js']
+      src: ['test/*.js']
     },
     jshint: {
-      all: ['Gruntfile.js', 'lib/*/*.js', 'lib/*.js', '*.js']
+      files: sourceFiles,
+      options: {
+        curly: true,
+        eqeqeq: true,
+        immed: true,
+        latedef: true,
+        newcap: true,
+        noarg: true,
+        sub: true,
+        undef: true,
+        boss: true,
+        eqnull: true,
+        node: true
+      }
     },
     jsbeautifier: {
       options: {
@@ -23,12 +38,11 @@ module.exports = function (grunt) {
           jslintHappy: true
         }
       },
-      files: ['Gruntfile.js', 'lib/*.js', 'lib/*/*.js']
+      files: sourceFiles
     }
   });
 
   grunt.registerTask('test', ['mochaTest']);
   grunt.registerTask('lint', ['jshint']);
-  grunt.registerTask('clean', ['jsbeautifier']);
-
+  grunt.registerTask('beautify', ['jsbeautifier']);
 };

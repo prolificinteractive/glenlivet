@@ -1,78 +1,69 @@
 # Glenlivet
 
-A library for less miserable website-driven API development.
+Create flexible, reusable processing pipelines powered by plugins.
 
-# `glenlivet.htmlToJson`
+## Example
 
-### `glenlivet.htmlToJson.parse(html, structure, callback)`
+```javascript
+var express = require('express');
+var glenlivet = require('glenlivet');
+var app = express();
 
-Example:
-
-```
-var html = ‘<div id=“name”>Eric</div>’;
-
-glenlivet.htmlToJson.parse(html, {
-  “name”: function ($container, $) {
-    return $(‘#name’).text();
-  }
-}, function (err, json) {
-    console.log(json.name); //“Eric”.
-});
-```
-
-### `glenlivet.htmlToJson.request(options, structure, callback)`
-
-Example:
-
-```
-glenlivet.htmlToJson.request({
-  uri: ‘http://www.prolificinteractive.com'
-}, [‘a’, {
-  ‘href’: function ($a) {
-    return $a.attr(‘href’);
+var prolific = glenlivet.createBarrel({
+  plugins: [
+    require('glenlivet-request'),
+    require('glenlivet-htmltojson'),
+    require('glenlivet-controller')
+  ],
+  pluginDefaults: {
+    request: {
+      protocol: 'http',
+      host: 'www.prolificinteractive.com'
+    }
   },
-  ‘text’: function ($a) {
-    return $a.text();
+  bottleMethod: {
+    returnDataPath: 'json'
   }
-}], function (err, json) {
-  console.log(json);
 });
-```
 
-### `glenlivet.ParseContext`
-
-## Bottles
-
-Bottles are configured workflows that provide a flexible, hierarchical middleware system.
-
-### `glenlivet.Bottle(config)`
-
-Example:
-
-```
-var getHomeHeaders = new glenlivet.Bottle({
-  request: ‘http://prolificinteractive.com',
-  htmlToJson: [‘h1,h2,h3,h4,h5,h6’, function ($a) {
-    return $a.text();
+prolific.bottle('getLinks', function () {
+  request: {
+    pathname: function (data) {
+      return '/' + (data.page || '');
+    }
+  },
+  htmlToJson: ['a[href]', {
+    'text': function ($a) {
+      return $a.text();
+    },
+    'href': function ($a) {
+      return $a.attr('href');
+    }
   }]
 });
 
-getHomeHeaders
-  .plugins([
-    glenlivet.htmlToJson.plugin,
-    glenlivet.request.plugin
-  ])
-  .middleware({
-    ‘after filter:htmlToJson’: function (data) {
-      data.json = _.map(data.json, function (text) {
-        return text.toUpperCase();
-      });
-    }
-  });
+app.use(function responseMethods (req, resp, next) {
+  resp.success = function (data) {
+    resp.send(data);
+  };
+
+  resp.error = function (err) {
+    resp.status(err.status).send({
+      error: {
+        type: err.type,
+        message: err.message
+      }
+    });
+  };
+
+  next();
+});
+
+app.listen(process.env.PORT || 8888);
+
+app.get('/:page/links', function (req, resp) {
+  prolific
+    .getLinks({ page: req.param('page') })
+    .done(resp.success, resp.failure);
+});
 ```
-
-## Barrels
-
-Barrels manage groups of bottles to provide higher-level features.
-
-### `new glenlivet.Barrel(config)`
