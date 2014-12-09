@@ -1,10 +1,11 @@
 var _ = require('lodash');
+var Q = require('q');
 var Bottle = require('../lib/Bottle');
 var Plugin = require('../lib/Plugin');
 
 describe('Bottle', function () {
   this.timeout(50);
-  
+
   var hookNames = ['preempt', 'setup', 'process', 'filter', 'persist'];
 
   it('has default hooks: ' + hookNames.join(', '), function () {
@@ -85,6 +86,34 @@ describe('Bottle', function () {
 
       bottle.serve(function () {
         history.join('').should.equal('132');
+        done();
+      });
+    });
+
+    it('can return a promise, which must be resolved for serving to complete', function (done) {
+      var bottle = new Bottle();
+      var history = [];
+
+      bottle.middleware({
+        'setup': function () {
+          return Q.delay(5).then(function () {
+            history.push('a');
+          });
+        },
+        'process': function () {
+          return Q.delay(20).then(function () {
+            history.push('b');
+          });
+        },
+        'filter': function () {
+          return Q.delay(10).then(function () {
+            history.push('c');
+          });
+        }
+      });
+
+      bottle.serve(function (err, data) {
+        history.join('').should.equal('acb');
         done();
       });
     });
