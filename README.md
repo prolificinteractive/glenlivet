@@ -2,68 +2,76 @@
 
 Create flexible, reusable processing pipelines powered by plugins.
 
-## Example
+## Installation
+
+`npm install glenlivet`
+
+## Usage
+
+### Bottles
+
+Bottles encapsulate a hierarchical system of named hooks. When a bottle is "served", it traverses the hooks and runs any middleware attached to each.
+
+#### Plugins
+
+Plugins modify bottles by extending the hook hierarchy, attaching middleware, or adding methods. You add them to bottles with the .plugins() method:
 
 ```javascript
-var express = require('express');
-var glenlivet = require('glenlivet');
-var app = express();
+var htmlToJsonPlugin = require('glenlivet-htmltojson');
+var requestPlugin = require('glenlivet-request');
 
-var prolific = glenlivet.createBarrel({
-  plugins: [
-    require('glenlivet-request'),
-    require('glenlivet-htmltojson'),
-    require('glenlivet-controller')
-  ],
-  pluginDefaults: {
-    request: {
-      protocol: 'http',
-      host: 'www.prolificinteractive.com'
-    }
-  },
-  bottleMethod: {
-    returnDataPath: 'json'
-  }
-});
-
-prolific.bottle('getLinks', function () {
+var getStructure = glenlivet.createBottle({
   request: {
-    pathname: function (data) {
-      return '/' + (data.page || '');
+    uri: function (data) {
+      return data.uri;
     }
   },
-  htmlToJson: ['a[href]', {
-    'text': function ($a) {
-      return $a.text();
+  htmlToJson: ['> *', {
+    'id': function ($el) {
+      return $el.attr('id') || null;
     },
-    'href': function ($a) {
-      return $a.attr('href');
+    'tagName': function ($el) {
+      return $el[0].tagName;
+    },
+    'className': function ($el) {
+      return $el.attr('class') || null;
+    },
+    'children': function () {
+      return this.recurse();
     }
   }]
-});
+}).plugins([
+  htmlToJsonPlugin,
+  requestPlugin
+]);
+```
 
-app.use(function responseMethods (req, resp, next) {
-  resp.success = function (data) {
-    resp.send(data);
-  };
+When plugins are loaded if their namespace exists as a key within the bottle configuration.
 
-  resp.error = function (err) {
-    resp.status(err.status).send({
-      error: {
-        type: err.type,
-        message: err.message
-      }
-    });
-  };
+### Barrels
 
-  next();
-});
+### Writing Plugins
 
-app.listen(process.env.PORT || 8888);
+```javascript
+var htmlToJson = require('htmlToJson');
+var glenlivet = reuqire('glenlivet');
 
-app.get('/:page/links', function (req, resp) {
-  prolific
-    .getLinks({ page: req.param('page') })
-    .done(resp.success, resp.failure);
+module.exports = glenlivet.createPlugin('htmlToJson', function (filter) {
+  this.middleware('filter:htmlToJson', function (data, next, error) {
+    htmlToJson
+      .parse(data.html, filter)
+      .done(function (json) {
+        data.json = json;
+        next();
+      }, error);
+  });
 });
 ```
+
+#### Attaching Middleware
+
+#### Adding Hooks
+
+## Examples
+
+[A scraped API with htmlToJson, request, and Express](examples/prolific.js)

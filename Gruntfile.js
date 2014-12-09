@@ -4,7 +4,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-jsbeautifier');
-  grunt.loadNpmTasks('grunt-istanbul');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),

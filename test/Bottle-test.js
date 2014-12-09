@@ -3,11 +3,13 @@ var Bottle = require('../lib/Bottle');
 var Plugin = require('../lib/Plugin');
 
 describe('Bottle', function () {
+  this.timeout(50);
+  
   var hookNames = ['preempt', 'setup', 'process', 'filter', 'persist'];
 
   it('has default hooks: ' + hookNames.join(', '), function () {
     var bottle = new Bottle();
-    _.pluck(bottle.hooks.children, 'name').join(', ').should.equal(hookNames.join(', '));
+    _.pluck(bottle._rootHook.children, 'name').join(', ').should.equal(hookNames.join(', '));
   });
 
   describe('serving', function () {
@@ -23,9 +25,6 @@ describe('Bottle', function () {
     it('runs synchronously against hook paths', function (done) {
       var bottle = new Bottle();
       var history = [];
-
-      bottle.hooks.add('setup:a');
-      bottle.hooks.add('setup:a:b');
 
       bottle.middleware({
         'setup:a': function (data, next) {
@@ -45,6 +44,18 @@ describe('Bottle', function () {
       });
     });
 
+    it('waits for parent hooks to be added if they do not exist yet', function (done) {
+      var bottle = new Bottle();
+
+      bottle.middleware('process:a:b', function () {
+        done();
+      });
+
+      bottle.middleware('process:a', _.noop);
+
+      bottle.serve();
+    });
+
     it('has access to the passed data object', function (done) {
       new Bottle().middleware({
         'process': function (data) {
@@ -59,9 +70,6 @@ describe('Bottle', function () {
     it('respects before and after hook callbacks', function (done) {
       var bottle = new Bottle();
       var history = [];
-
-      bottle.hooks.add('setup:a');
-      bottle.hooks.add('setup:a:b');
 
       bottle.middleware({
         'setup:a': function () {
@@ -84,9 +92,6 @@ describe('Bottle', function () {
     it('aborts middleware chain when done is called', function (done) {
       var bottle = new Bottle();
       var history = [];
-
-      bottle.hooks.add('setup:a');
-      bottle.hooks.add('setup:a:b');
 
       bottle.middleware({
         'setup:a': function (data, next, _done) {

@@ -2,6 +2,7 @@ var Q = require('q');
 var Hook = require('../lib/Hook');
 
 describe('Hook', function () {
+  this.timeout(50);
 
   describe('adding subhooks with .add()', function () {
     it('takes a string or array of hook names as an argument', function () {
@@ -103,9 +104,7 @@ describe('Hook', function () {
 
       hook.children[0].insertWithin('bar');
 
-      Q.all(promises).done(function () {
-        done();
-      });
+      Q.all(promises).fin(done);
     });
   });
 
@@ -129,7 +128,7 @@ describe('Hook', function () {
         each: function () {
           history.push(this.name);
         }
-      }, null, function () {
+      }, function () {
         history.join('  ').should.equal('a  c  d  b  e');
         done();
       });
@@ -145,7 +144,7 @@ describe('Hook', function () {
         each: function () {
           history.push(this.name);
         }
-      }, null, function () {
+      }, function (err) {
         history.join('  ').should.equal('Bef:a  a  Bef:c  c  Bef:d  d  Bef:b  b  Bef:e  e');
         done();
       });
@@ -161,54 +160,10 @@ describe('Hook', function () {
         each: function () {
           history.push(this.name);
         }
-      }, null, function () {
+      }, function () {
         history.join('  ').should.equal('a  c  A:c  d  A:d  A:a  b  e  A:e  A:b');
         done();
       });
-    });
-  });
-
-  describe('running middleware stacks', function () {
-    var hook = new Hook();
-    hook.insertWithin('a');
-    hook.children[0].insertWithin(['b', 'c']);
-
-    it('runs the stack of functions synchronously against the hook', function (done) {
-      var history = [];
-
-      hook.children[0].runMiddlewareStack([
-        function (data, next) {
-          setTimeout(function () {
-            history.push('foo');
-            next();
-          }, 5);
-        },
-        function () {
-          history.push('bar');
-        }
-      ], null, function () {
-        history.join('').should.equal('foobar');
-        done();
-      });
-    });
-
-    it('aborts the middleware chain if done() is called', function (done) {
-      hook.children[0].runMiddlewareStack([
-        function (data, next, _done) {
-          _done();
-        },
-        function () {
-          throw new Error('this function should not run');
-        }
-      ], null, done);
-    });
-
-    it('sets the hook as the context within the middleware callback', function (done) {
-      hook.children[0].runMiddlewareStack([
-        function () {
-          this.name.should.equal('a');
-        }
-      ], null, done);
     });
   });
 });
