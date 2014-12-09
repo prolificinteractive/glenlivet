@@ -46,31 +46,46 @@ var getStructure = glenlivet.createBottle({
 ]);
 ```
 
-When plugins are loaded if their namespace exists as a key within the bottle configuration.
+Plugins are loaded if their namespace exists as a key within the bottle configuration.
 
 ### Barrels
 
+TODO
+
 ### Writing Plugins
+
+#### Middleware
+
+Bottles come with a set of default middleware hooks:
+- `preempt`: Things that might make the rest of the middleware unnecessary, for example caching.
+- `setup`: Getting options prepared for `process` middleware. The main purpose is to allow other plugins to modify those options.
+- `process`: For data-generating procedures, for example making an HTTP request.
+- `filter`: Transforms data created by `process` middleware.
+- `persist`: Meant for things like caching to save the results at the end of the pipeline.
+
+#### glenlivet.createPlugin()
+
+Plugins are created using the glenlivet.createPlugin() method. This method takes two arguments, the first being the configuration namespace it will use, and a callback that is called every time the plugin is used by a bottle. The first argument of that function is the configuration for that plugin, while `this` corresponds to the bottle.
+
+You'll mostly be using the bottle's middleware() method to read and write new values on the data object, like so:
 
 ```javascript
 var htmlToJson = require('htmlToJson');
 var glenlivet = reuqire('glenlivet');
 
 module.exports = glenlivet.createPlugin('htmlToJson', function (filter) {
-  this.middleware('filter:htmlToJson', function (data, next, error) {
+  this.middleware('filter:htmlToJson', function (data, next, done) {
     htmlToJson
       .parse(data.html, filter)
       .done(function (json) {
         data.json = json;
         next();
-      }, error);
+      }, done);
   });
 });
 ```
 
-#### Attaching Middleware
-
-#### Adding Hooks
+Notice the name of the middleware `filter:htmlToJson`. It will automatically create that hook within the existing `filter`. However, the hook will not be added if the immediate parent does not exist. For example, `filter:a:b:c` will not work until all ancestors are added to the hook hierarchy. This way we can create sub-plugins that depend on the existence of another plugin to work.
 
 ## Examples
 

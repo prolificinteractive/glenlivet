@@ -1,14 +1,13 @@
-var glenlivet = require('../lib/glenlivet');
 var htmlToJson = require('htmlToJson');
+var glenlivet = reuqire('glenlivet');
 
-module.exports = glenlivet.createPlugin('htmlToJson', function (config) {
-  this.hooks.add(['filter:htmlToJson']);
-
-  this.middleware({
-    'filter:htmlToJson': function (data) {
-      this.set('json', function () {
-        return htmlToJson.parse(data.html);
-      });
-    }
+module.exports = glenlivet.createPlugin('htmlToJson', function (filter) {
+  this.middleware('filter:htmlToJson', function (data, next, done) {
+    htmlToJson
+    .parse(data.html, filter)
+    .done(function (json) {
+      data.json = json;
+      next();
+    }, done);
   });
 });
