@@ -154,4 +154,36 @@ describe('Bottle', function () {
       });
     });
   });
+
+  describe('creating methods out of bottles', function () {
+    describe('.method()', function () {
+      it('returns a method that proxies to bottle.serve()', function (done) {
+        new Bottle().middleware({
+          'preempt': function (data) {
+            data.success = true;
+          }
+        }).method()(function (err, data) {
+          if (err) {
+            throw err;
+          }
+
+          data.success.should.equal(true);
+          done();
+        });
+      });
+
+      it('returns a methods that returns a promise for the passed path', function (done) {
+        new Bottle().middleware({
+          'preempt': function (data) {
+            data.success = true;
+          }
+        }).method('success')().done(function (success) {
+          success.should.equal(true);
+          done();
+        }, function (err) {
+          throw err;
+        });
+      });
+    });
+  });
 });
