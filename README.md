@@ -50,7 +50,41 @@ Plugins are loaded if their namespace exists as a key within the bottle configur
 
 ### Barrels
 
-TODO
+Barrels group together bottles, and provide functionality like configuration defaults, plugin autoloading, and global middleware for member bottles.
+
+```javascript
+var glenlivet = require('glenlivet');
+
+var prolific = glenlivet.createBarrel({
+  plugins: [
+    require('glenlivet-request'),
+    require('glenlivet-htmltojson')
+  ],
+  pluginDefaults: {
+    request: {
+      host: 'www.prolificinteractive.com'
+    }
+  }
+});
+
+var getLinks = prolific.bottle('getLinks', {
+  request: {
+    pathname: function (data) {
+      return data.page || '/';
+    }
+  },
+  htmlToJson: ['a[href]', {
+    'href': function ($a) {
+      return $a.attr('href');
+    },
+    'text': function ($a) {
+      return $a.text();
+    }
+  }]
+}).method('json');
+```
+
+Any `plugins` will be loaded with each bottle, as long as they have the config key corresponding to the plugin's namespace. Any `pluginDefaults` will be mixed into the bottle configuration for the corresponding plugins.
 
 ### Writing Plugins
 
