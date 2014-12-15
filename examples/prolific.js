@@ -1,31 +1,24 @@
 var express = require('express');
-var glenlivet = require('glenlivet');
+var glenlivet = require('../index');
 var app = express();
 
 var prolific = glenlivet.createBarrel({
   plugins: [
     require('glenlivet-request'),
-    require('glenlivet-htmltojson'),
-    require('glenlivet-controller')
+    require('glenlivet-htmltojson')
   ],
   pluginDefaults: {
     request: {
       protocol: 'http',
       host: 'www.prolificinteractive.com'
     }
-  },
-  bottleMethod: {
-    returnDataPath: 'json'
   }
 });
 
-prolific.bottle('getLinks', function () {
+prolific.bottle('getLinks', {
   request: {
     pathname: function (data) {
       return '/' + (data.page || '');
-    },
-    header: {
-      'Weird-Ass-Header': getWeirdAssHeader
     }
   },
   htmlToJson: ['a[href]', {
@@ -40,18 +33,18 @@ prolific.bottle('getLinks', function () {
 
 app.use(function addResponseMethods (req, resp, next) {
   resp.success = function (data) {
-    resp.send(data);
+    resp.send(data.json);
   };
 
   resp.error = function (err) {
     resp
-    .status(err.status)
-    .send({
-      error: {
-        type: err.type,
-        message: err.message
-      }
-    });
+      .status(err.status)
+      .send({
+        error: {
+          type: err.type,
+          message: err.message
+        }
+      });
   };
 
   next();
