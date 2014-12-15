@@ -15,6 +15,22 @@ describe('Plugin', function () {
     ]);
   });
 
+  it('can add middleware to the bottle', function (done) {
+    new Bottle({
+      test: {
+        x: 5
+      }
+    }).plugins([
+      new Plugin('test', function (config) {
+        this.middleware({
+          'process:test': function () {
+            done();
+          }
+        });
+      })
+    ]).serve();
+  });
+
   it('is given the bottle itself as the context', function (done) {
     new Bottle({
       test: {
