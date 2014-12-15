@@ -13,6 +13,10 @@
     "lodash": "^2.4.1",
     "q": "^1.1.1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prolificinteractive/node-html-to-json"
+  },
   "devDependencies": {
     "express": "^4.10.6",
     "grunt": "^0.4.5",
