@@ -67,15 +67,35 @@ describe('Barrel', function () {
       var barrel = new Barrel();
       var history = [];
 
-      barrel.bottle('a');
+      barrel.bottle('a', {});
 
       barrel.eachBottle(function (bottle, name) {
         history.push(name);
       });
 
-      barrel.bottle('b');
+      barrel.bottle('b', {});
 
       history.join('').should.equal('ab');
+      done();
+    });
+
+    it('returns private bottles', function (done) {
+      var barrel = new Barrel();
+      var history = [];
+
+      barrel.bottle({
+        str: 'foo'
+      });
+
+      barrel.eachBottle(function (bottle) {
+        history.push(bottle.config.str);
+      });
+
+      barrel.bottle({
+        str: 'bar'
+      });
+
+      history.join('').should.equal('foobar');
       done();
     });
   });
